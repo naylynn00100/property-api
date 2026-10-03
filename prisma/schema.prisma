@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+}
+enum Role {
+  USER
+  ADMIN
+}
+enum TransactionType {
+  sale
+  rent
+}
+enum PropertyType {
+  apartment_condo
+  house
+  land
+  commercial
+  room
+}
+enum City {
+  Yangon
+  Mandalay
+}
+enum BillingPeriod {
+  monthly
+  weekly
+  yearly
+  other
+}
+enum ListingStatus {
+  draft
+  pending_review
+  published
+  paused
+  sold_rented
+  rejected
+  hidden
+  removed
+}
+
+model User {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  passwordHash String
+  phone String?
+  role Role @default(USER)
+  listings Listing[]
+  auditLogs AdminAuditLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Listing {
+  id String @id @default(cuid())
+  ownerId String
+  owner User @relation(fields:[ownerId], references:[id], onDelete:Cascade)
+  title String
+  description String
+  transactionType TransactionType
+  propertyType PropertyType
+  city City
+  township String
+  address String
+  priceMmk Int
+  rentalBillingPeriod BillingPeriod?
+  bedrooms Int?
+  bathrooms Int?
+  floorArea Int?
+  landArea Int?
+  furnishing String?
+  contactName String
+  contactPhone String
+  status ListingStatus @default(draft)
+  publishedAt DateTime?
+  images ListingImage[]
+  amenities ListingAmenity[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model ListingImage {
+  id String @id @default(cuid())
+  listingId String
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url String
+  altText String
+  sortOrder Int @default(0)
+  createdAt DateTime @default(now())
+}
+model Amenity {
+  id String @id @default(cuid())
+  name String @unique
+  listings ListingAmenity[]
+}
+model ListingAmenity {
+  listingId String
+  amenityId String
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  @@id([listingId, amenityId])
+}
+model AdminAuditLog {
+  id String @id @default(cuid())
+  adminId String
+  admin User @relation(fields: [adminId], references: [id])
+  action String
+  targetType String
+  targetId String
+  metadata String?
+  createdAt DateTime @default(now())
+}
